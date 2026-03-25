@@ -228,6 +228,77 @@ export class AudioSystem {
     }
   }
 
+  // ── Cat vocals ────────────────────────────────────────────────────────────
+
+  // Soft ambient meow (occasional, during gameplay)
+  playMeow() {
+    if (!this._ready) return;
+    const ctx = this._ctx;
+    const t   = ctx.currentTime;
+
+    // Sine tone with rising-then-falling pitch glide
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(580, t);
+    osc.frequency.linearRampToValueAtTime(920, t + 0.13);
+    osc.frequency.exponentialRampToValueAtTime(660, t + 0.36);
+
+    // Gentle vibrato
+    const vib     = ctx.createOscillator();
+    const vibGain = ctx.createGain();
+    vib.frequency.value  = 5.5;
+    vibGain.gain.value   = 14;
+    vib.connect(vibGain);
+    vibGain.connect(osc.frequency);
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.10, t + 0.05);
+    g.gain.setValueAtTime(0.10, t + 0.24);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.40);
+
+    osc.connect(g); g.connect(this._master);
+    osc.start(t); osc.stop(t + 0.44);
+    vib.start(t); vib.stop(t + 0.44);
+  }
+
+  // Screeching meow when the cat gets smushed
+  playShriek() {
+    if (!this._ready) return;
+    const ctx = this._ctx;
+    const t   = ctx.currentTime;
+
+    // Sawtooth screech — sharp rise then fall
+    const osc1 = ctx.createOscillator();
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(700, t);
+    osc1.frequency.linearRampToValueAtTime(1550, t + 0.09);
+    osc1.frequency.exponentialRampToValueAtTime(380, t + 0.52);
+
+    // Upper harmonic layer (sine) for cat-like timbre
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(1100, t);
+    osc2.frequency.linearRampToValueAtTime(2300, t + 0.09);
+    osc2.frequency.exponentialRampToValueAtTime(560, t + 0.52);
+
+    const g1 = ctx.createGain();
+    g1.gain.setValueAtTime(0, t);
+    g1.gain.linearRampToValueAtTime(0.30, t + 0.04);
+    g1.gain.setValueAtTime(0.30, t + 0.14);
+    g1.gain.exponentialRampToValueAtTime(0.001, t + 0.58);
+
+    const g2 = ctx.createGain();
+    g2.gain.setValueAtTime(0, t);
+    g2.gain.linearRampToValueAtTime(0.13, t + 0.04);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.58);
+
+    osc1.connect(g1); g1.connect(this._master);
+    osc2.connect(g2); g2.connect(this._master);
+    osc1.start(t); osc1.stop(t + 0.62);
+    osc2.start(t); osc2.stop(t + 0.62);
+  }
+
   playNearMiss() {
     if (!this._ready) return;
     const ctx = this._ctx;

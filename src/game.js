@@ -54,6 +54,9 @@ export class Game {
     // Character selection
     this._selectedCat = 0;
 
+    // Ambient meow timer (seconds until next soft meow)
+    this._meowTimer = 10 + Math.random() * 10;
+
     this._bindInput();
   }
 
@@ -176,6 +179,7 @@ export class Game {
   _die() {
     this.particles.emitSquish(this.cat.x + CAT_SIZE / 2, this.cat.y + CAT_SIZE / 2);
     this.audio.playSquish();
+    this.audio.playShriek();
     this.cat.alive   = false;
     this.shakeAmt    = 7;
     this._deathTimer = DEATH_DURATION;
@@ -267,6 +271,13 @@ export class Game {
       this.timer = 0;
       this._resetCrossing(); // timer retreat, no life lost
       return;
+    }
+
+    // Ambient meow
+    this._meowTimer -= dt;
+    if (this._meowTimer <= 0) {
+      this.audio.playMeow();
+      this._meowTimer = 10 + Math.random() * 14;
     }
 
     // Win condition
