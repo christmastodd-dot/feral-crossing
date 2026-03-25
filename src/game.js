@@ -4,7 +4,7 @@ import {
   TIME_LIMIT, END_ROW, START_ROW, CAT_SIZE, TRUCK_WIDTH,
   NEAR_MISS_EXPAND, NEAR_MISS_BONUS,
 } from './config.js';
-import { Cat }            from './cat.js';
+import { Cat, CAT_PALETTES } from './cat.js';
 import { LaneManager }   from './lanes.js';
 import { Background }    from './background.js';
 import { ParticleSystem } from './particles.js';
@@ -18,7 +18,7 @@ function overlaps(a, b) {
 }
 
 // ── States ───────────────────────────────────────────────────────────────────
-// enterName | title | playing | paused | dying | celebrating | gameover
+// enterName | selectCat | title | playing | paused | dying | celebrating | gameover
 
 export class Game {
   constructor(canvas) {
@@ -50,6 +50,9 @@ export class Game {
     // Player name
     this.playerName = '';
     this._nameInput = '';
+
+    // Character selection
+    this._selectedCat = 0;
 
     this._bindInput();
   }
@@ -105,8 +108,14 @@ export class Game {
         }
         if (code === 'Enter') {
           this.playerName = this._nameInput.trim() || 'CAT';
-          this.state = 'title';
+          this.state = 'selectCat';
         }
+        break;
+
+      case 'selectCat':
+        if (code === 'ArrowLeft'  || code === 'KeyA') this._selectedCat = (this._selectedCat + CAT_PALETTES.length - 1) % CAT_PALETTES.length;
+        if (code === 'ArrowRight' || code === 'KeyD') this._selectedCat = (this._selectedCat + 1) % CAT_PALETTES.length;
+        if (code === 'Enter' || code === 'Space') this.state = 'title';
         break;
 
       case 'title':
@@ -148,6 +157,7 @@ export class Game {
   // ── Game flow ─────────────────────────────────────────────────────────────
 
   _startGame() {
+    this.cat.paletteIndex = this._selectedCat;
     this.cat.reset();
     this.lanes.reset();
     this.lanes.setDifficulty(0);
@@ -325,6 +335,7 @@ export class Game {
     const { ctx } = this;
 
     if (this.state === 'enterName')      { this._drawEnterName();    return; }
+    if (this.state === 'selectCat')      { this._drawSelectCat();    return; }
     if (this.state === 'title')          { this._drawTitle();        return; }
     if (this.state === 'gameover')       { this._drawGameOver();     return; }
 
@@ -483,6 +494,84 @@ export class Game {
         c.fillText(`${i + 1}.  ${nameStr}  ${String(s.score).padStart(6, '0')}`, CANVAS_WIDTH / 2, 394 + i * 22);
       });
     }
+  }
+
+  _drawSelectCat() {
+    const c = this.ctx;
+    c.fillStyle = '#0a0e1a';
+    c.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    c.save();
+    c.shadowColor = '#d48000';
+    c.shadowBlur  = 18;
+    c.fillStyle   = '#ffe000';
+    c.font        = 'bold 34px monospace';
+    c.textAlign   = 'center';
+    c.fillText('CHOOSE YOUR CAT', CANVAS_WIDTH / 2, 72);
+    c.restore();
+
+    c.fillStyle = '#666';
+    c.font      = '13px monospace';
+    c.textAlign = 'center';
+    c.fillText('LEFT / RIGHT to browse   ENTER to confirm', CANVAS_WIDTH / 2, 100);
+
+    const CAT_S    = 60;         // sprite size for this screen
+    const SPACING  = 90;         // horizontal gap center-to-center
+    const startX   = CANVAS_WIDTH / 2 - (CAT_PALETTES.length - 1) * SPACING / 2;
+    const catY     = 190;
+
+    for (let i = 0; i < CAT_PALETTES.length; i++) {
+      const cx = startX + i * SPACING;
+      const selected = i === this._selectedCat;
+
+      // Selection highlight
+      if (selected) {
+        c.fillStyle = 'rgba(255,224,0,0.12)';
+        c.beginPath();
+        c.arc(cx, catY, CAT_S * 0.72, 0, Math.PI * 2);
+        c.fill();
+        c.strokeStyle = '#ffe000';
+        c.lineWidth   = 2;
+        c.beginPath();
+        c.arc(cx, catY, CAT_S * 0.72, 0, Math.PI * 2);
+        c.stroke();
+      }
+
+      // Draw cat sprite centered at (cx, catY)
+      c.save();
+      c.translate(cx, catY);
+      _catSprite(c, CAT_S, 0, CAT_PALETTES[i]);
+      c.restore();
+
+      // Name label below
+      c.fillStyle = selected ? '#ffe000' : '#777';
+      c.font      = selected ? 'bold 13px monospace' : '12px monospace';
+      c.textAlign = 'center';
+      c.fillText(CAT_PALETTES[i].name, cx, catY + CAT_S / 2 + 22);
+    }
+
+    // Arrow indicators
+    c.fillStyle = '#ffe000';
+    c.font      = 'bold 24px monospace';
+    c.textAlign = 'center';
+    c.fillText('<', startX - SPACING * 0.6, catY + 4);
+    c.fillText('>', startX + (CAT_PALETTES.length - 1) * SPACING + SPACING * 0.6, catY + 4);
+
+    // Selected name big
+    c.fillStyle = '#fff';
+    c.font      = 'bold 22px monospace';
+    c.textAlign = 'center';
+    c.fillText(CAT_PALETTES[this._selectedCat].name, CANVAS_WIDTH / 2, catY + CAT_S / 2 + 62);
+
+    // Press Enter
+    c.save();
+    c.shadowColor = '#000';
+    c.shadowBlur  = 6;
+    c.fillStyle   = '#fff';
+    c.font        = 'bold 20px monospace';
+    c.textAlign   = 'center';
+    c.fillText('Press  ENTER  to continue', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 72);
+    c.restore();
   }
 
   _drawTitle() {

@@ -939,10 +939,20 @@ const LERP_SPEED   = 18;
 // Rotation angles per facing direction (head always drawn toward negative-Y in local space)
 const FACING_ANGLE = { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 };
 
+// â”€â”€ Cat colour palettes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const CAT_PALETTES = [
+  { name: 'Grey Tabby',   body: '#8a9e7a', head: '#96ae84', ear: '#7a9068', earIn: '#c07878', belly: '#b2ca9c', stripe: 'rgba(76,96,60,0.55)',    tail: '#7a9068', tailTip: '#96ae84'  },
+  { name: 'Orange',       body: '#cc7733', head: '#dd8844', ear: '#b86020', earIn: '#e09070', belly: '#f0a855', stripe: 'rgba(140,55,5,0.55)',     tail: '#b86020', tailTip: '#dd8844'  },
+  { name: 'Black',        body: '#252525', head: '#303030', ear: '#1a1a1a', earIn: '#a05858', belly: '#3d3d3d', stripe: 'rgba(0,0,0,0.55)',        tail: '#1a1a1a', tailTip: '#383838'  },
+  { name: 'White',        body: '#d8d8d8', head: '#ececec', ear: '#c4c4c4', earIn: '#f0a0a8', belly: '#f8f8f8', stripe: 'rgba(160,160,160,0.38)',  tail: '#c4c4c4', tailTip: '#ececec'  },
+  { name: 'Dark Stripe',  body: '#888888', head: '#999999', ear: '#686868', earIn: '#c07878', belly: '#b8b8b8', stripe: 'rgba(20,20,20,0.72)',     tail: '#686868', tailTip: '#999999'  },
+];
+
 class Cat {
   constructor() {
-    this.gridCol = Math.floor(COLS / 2);
-    this.gridRow = START_ROW;
+    this.gridCol      = Math.floor(COLS / 2);
+    this.gridRow      = START_ROW;
+    this.paletteIndex = 0;
     this._syncVisual();
     this._resetAnim();
   }
@@ -1047,7 +1057,7 @@ class Cat {
 
   // â”€â”€ Cat sprite (local space, head toward -Y, tail toward +Y) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Centered on (0,0). Bounds roughly Â±17 px.
-  _drawCat(ctx, s, celebrateTime) { _catSprite(ctx, s, celebrateTime); }
+  _drawCat(ctx, s, celebrateTime) { _catSprite(ctx, s, celebrateTime, CAT_PALETTES[this.paletteIndex]); }
 
   // â”€â”€ Squished dead state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   _drawSquished(ctx, s) {
@@ -1087,7 +1097,7 @@ class Cat {
 
 // â”€â”€ Standalone cat sprite â€” usable outside the class (e.g. title screen) â”€â”€â”€â”€â”€
 // Call after ctx.translate(centerX, centerY). Draws head toward -Y.
-function _catSprite(ctx, s, celebrateTime = 0) {
+function _catSprite(ctx, s, celebrateTime = 0, pal = CAT_PALETTES[0]) {
     const h = s / 2; // 17
 
     // Ground shadow
@@ -1097,39 +1107,38 @@ function _catSprite(ctx, s, celebrateTime = 0) {
     ctx.fill();
 
     // â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    ctx.fillStyle = '#8a9e7a';
+    ctx.fillStyle = pal.body;
     ctx.fillRect(-h + 5, -2, s - 10, h + 2);
 
     // Belly (lighter patch)
-    ctx.fillStyle = '#b2ca9c';
+    ctx.fillStyle = pal.belly;
     ctx.beginPath();
     ctx.ellipse(0, h / 3, h - 10, h / 2 - 2, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Tabby stripes
-    ctx.fillStyle = 'rgba(76, 96, 60, 0.55)';
+    ctx.fillStyle = pal.stripe;
     ctx.fillRect(-h + 7,  0, 2, h - 2);
     ctx.fillRect(-h + 11, 0, 2, h - 2);
     ctx.fillRect(h - 9,   0, 2, h - 2);
 
     // â”€â”€ Head â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    // Head: round, overlaps top of body
-    ctx.fillStyle = '#96ae84';
+    ctx.fillStyle = pal.head;
     ctx.beginPath();
     ctx.arc(0, -5, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    // â”€â”€ Ears (pointy triangles â€” unmistakably cat) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // â”€â”€ Ears â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Left ear outer
-    ctx.fillStyle = '#7a9068';
+    ctx.fillStyle = pal.ear;
     ctx.beginPath();
-    ctx.moveTo(-10, -10);   // base left
-    ctx.lineTo(-5,  -5);    // base right
-    ctx.lineTo(-14, -19);   // pointed tip
+    ctx.moveTo(-10, -10);
+    ctx.lineTo(-5,  -5);
+    ctx.lineTo(-14, -19);
     ctx.closePath();
     ctx.fill();
     // Left ear inner
-    ctx.fillStyle = '#c07878';
+    ctx.fillStyle = pal.earIn;
     ctx.beginPath();
     ctx.moveTo(-9,  -11);
     ctx.lineTo(-6,  -7);
@@ -1138,7 +1147,7 @@ function _catSprite(ctx, s, celebrateTime = 0) {
     ctx.fill();
 
     // Right ear outer
-    ctx.fillStyle = '#7a9068';
+    ctx.fillStyle = pal.ear;
     ctx.beginPath();
     ctx.moveTo(10,  -10);
     ctx.lineTo(5,   -5);
@@ -1146,7 +1155,7 @@ function _catSprite(ctx, s, celebrateTime = 0) {
     ctx.closePath();
     ctx.fill();
     // Right ear inner
-    ctx.fillStyle = '#c07878';
+    ctx.fillStyle = pal.earIn;
     ctx.beginPath();
     ctx.moveTo(9,   -11);
     ctx.lineTo(6,   -7);
@@ -1199,7 +1208,7 @@ function _catSprite(ctx, s, celebrateTime = 0) {
 
     // â”€â”€ Tail (bezier curve) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const curl = celebrateTime > 0 ? Math.sin(celebrateTime * 6) * 5 : 0;
-    ctx.strokeStyle = '#7a9068';
+    ctx.strokeStyle = pal.tail;
     ctx.lineWidth   = 3;
     ctx.lineCap     = 'round';
     ctx.beginPath();
@@ -1211,7 +1220,7 @@ function _catSprite(ctx, s, celebrateTime = 0) {
     );
     ctx.stroke();
     // Tail tip (slightly lighter)
-    ctx.strokeStyle = '#96ae84';
+    ctx.strokeStyle = pal.tailTip;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(13 + curl, h + 7);
@@ -1702,7 +1711,7 @@ function overlaps(a, b) {
 }
 
 // â”€â”€ States â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// enterName | title | playing | paused | dying | celebrating | gameover
+// enterName | selectCat | title | playing | paused | dying | celebrating | gameover
 
 class Game {
   constructor(canvas) {
@@ -1734,6 +1743,9 @@ class Game {
     // Player name
     this.playerName = '';
     this._nameInput = '';
+
+    // Character selection
+    this._selectedCat = 0;
 
     this._bindInput();
   }
@@ -1789,8 +1801,14 @@ class Game {
         }
         if (code === 'Enter') {
           this.playerName = this._nameInput.trim() || 'CAT';
-          this.state = 'title';
+          this.state = 'selectCat';
         }
+        break;
+
+      case 'selectCat':
+        if (code === 'ArrowLeft'  || code === 'KeyA') this._selectedCat = (this._selectedCat + CAT_PALETTES.length - 1) % CAT_PALETTES.length;
+        if (code === 'ArrowRight' || code === 'KeyD') this._selectedCat = (this._selectedCat + 1) % CAT_PALETTES.length;
+        if (code === 'Enter' || code === 'Space') this.state = 'title';
         break;
 
       case 'title':
@@ -1832,6 +1850,7 @@ class Game {
   // â”€â”€ Game flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   _startGame() {
+    this.cat.paletteIndex = this._selectedCat;
     this.cat.reset();
     this.lanes.reset();
     this.lanes.setDifficulty(0);
@@ -2009,6 +2028,7 @@ class Game {
     const { ctx } = this;
 
     if (this.state === 'enterName')      { this._drawEnterName();    return; }
+    if (this.state === 'selectCat')      { this._drawSelectCat();    return; }
     if (this.state === 'title')          { this._drawTitle();        return; }
     if (this.state === 'gameover')       { this._drawGameOver();     return; }
 
@@ -2167,6 +2187,84 @@ class Game {
         c.fillText(`${i + 1}.  ${nameStr}  ${String(s.score).padStart(6, '0')}`, CANVAS_WIDTH / 2, 394 + i * 22);
       });
     }
+  }
+
+  _drawSelectCat() {
+    const c = this.ctx;
+    c.fillStyle = '#0a0e1a';
+    c.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    c.save();
+    c.shadowColor = '#d48000';
+    c.shadowBlur  = 18;
+    c.fillStyle   = '#ffe000';
+    c.font        = 'bold 34px monospace';
+    c.textAlign   = 'center';
+    c.fillText('CHOOSE YOUR CAT', CANVAS_WIDTH / 2, 72);
+    c.restore();
+
+    c.fillStyle = '#666';
+    c.font      = '13px monospace';
+    c.textAlign = 'center';
+    c.fillText('LEFT / RIGHT to browse   ENTER to confirm', CANVAS_WIDTH / 2, 100);
+
+    const CAT_S    = 60;         // sprite size for this screen
+    const SPACING  = 90;         // horizontal gap center-to-center
+    const startX   = CANVAS_WIDTH / 2 - (CAT_PALETTES.length - 1) * SPACING / 2;
+    const catY     = 190;
+
+    for (let i = 0; i < CAT_PALETTES.length; i++) {
+      const cx = startX + i * SPACING;
+      const selected = i === this._selectedCat;
+
+      // Selection highlight
+      if (selected) {
+        c.fillStyle = 'rgba(255,224,0,0.12)';
+        c.beginPath();
+        c.arc(cx, catY, CAT_S * 0.72, 0, Math.PI * 2);
+        c.fill();
+        c.strokeStyle = '#ffe000';
+        c.lineWidth   = 2;
+        c.beginPath();
+        c.arc(cx, catY, CAT_S * 0.72, 0, Math.PI * 2);
+        c.stroke();
+      }
+
+      // Draw cat sprite centered at (cx, catY)
+      c.save();
+      c.translate(cx, catY);
+      _catSprite(c, CAT_S, 0, CAT_PALETTES[i]);
+      c.restore();
+
+      // Name label below
+      c.fillStyle = selected ? '#ffe000' : '#777';
+      c.font      = selected ? 'bold 13px monospace' : '12px monospace';
+      c.textAlign = 'center';
+      c.fillText(CAT_PALETTES[i].name, cx, catY + CAT_S / 2 + 22);
+    }
+
+    // Arrow indicators
+    c.fillStyle = '#ffe000';
+    c.font      = 'bold 24px monospace';
+    c.textAlign = 'center';
+    c.fillText('<', startX - SPACING * 0.6, catY + 4);
+    c.fillText('>', startX + (CAT_PALETTES.length - 1) * SPACING + SPACING * 0.6, catY + 4);
+
+    // Selected name big
+    c.fillStyle = '#fff';
+    c.font      = 'bold 22px monospace';
+    c.textAlign = 'center';
+    c.fillText(CAT_PALETTES[this._selectedCat].name, CANVAS_WIDTH / 2, catY + CAT_S / 2 + 62);
+
+    // Press Enter
+    c.save();
+    c.shadowColor = '#000';
+    c.shadowBlur  = 6;
+    c.fillStyle   = '#fff';
+    c.font        = 'bold 20px monospace';
+    c.textAlign   = 'center';
+    c.fillText('Press  ENTER  to continue', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 72);
+    c.restore();
   }
 
   _drawTitle() {

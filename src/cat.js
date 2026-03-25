@@ -11,10 +11,20 @@ const LERP_SPEED   = 18;
 // Rotation angles per facing direction (head always drawn toward negative-Y in local space)
 const FACING_ANGLE = { up: 0, right: Math.PI / 2, down: Math.PI, left: -Math.PI / 2 };
 
+// ── Cat colour palettes ───────────────────────────────────────────────────────
+export const CAT_PALETTES = [
+  { name: 'Grey Tabby',   body: '#8a9e7a', head: '#96ae84', ear: '#7a9068', earIn: '#c07878', belly: '#b2ca9c', stripe: 'rgba(76,96,60,0.55)',    tail: '#7a9068', tailTip: '#96ae84'  },
+  { name: 'Orange',       body: '#cc7733', head: '#dd8844', ear: '#b86020', earIn: '#e09070', belly: '#f0a855', stripe: 'rgba(140,55,5,0.55)',     tail: '#b86020', tailTip: '#dd8844'  },
+  { name: 'Black',        body: '#252525', head: '#303030', ear: '#1a1a1a', earIn: '#a05858', belly: '#3d3d3d', stripe: 'rgba(0,0,0,0.55)',        tail: '#1a1a1a', tailTip: '#383838'  },
+  { name: 'White',        body: '#d8d8d8', head: '#ececec', ear: '#c4c4c4', earIn: '#f0a0a8', belly: '#f8f8f8', stripe: 'rgba(160,160,160,0.38)',  tail: '#c4c4c4', tailTip: '#ececec'  },
+  { name: 'Dark Stripe',  body: '#888888', head: '#999999', ear: '#686868', earIn: '#c07878', belly: '#b8b8b8', stripe: 'rgba(20,20,20,0.72)',     tail: '#686868', tailTip: '#999999'  },
+];
+
 export class Cat {
   constructor() {
-    this.gridCol = Math.floor(COLS / 2);
-    this.gridRow = START_ROW;
+    this.gridCol      = Math.floor(COLS / 2);
+    this.gridRow      = START_ROW;
+    this.paletteIndex = 0;
     this._syncVisual();
     this._resetAnim();
   }
@@ -119,7 +129,7 @@ export class Cat {
 
   // ── Cat sprite (local space, head toward -Y, tail toward +Y) ─────────────
   // Centered on (0,0). Bounds roughly ±17 px.
-  _drawCat(ctx, s, celebrateTime) { _catSprite(ctx, s, celebrateTime); }
+  _drawCat(ctx, s, celebrateTime) { _catSprite(ctx, s, celebrateTime, CAT_PALETTES[this.paletteIndex]); }
 
   // ── Squished dead state ───────────────────────────────────────────────────
   _drawSquished(ctx, s) {
@@ -159,7 +169,7 @@ export class Cat {
 
 // ── Standalone cat sprite — usable outside the class (e.g. title screen) ─────
 // Call after ctx.translate(centerX, centerY). Draws head toward -Y.
-function _catSprite(ctx, s, celebrateTime = 0) {
+function _catSprite(ctx, s, celebrateTime = 0, pal = CAT_PALETTES[0]) {
     const h = s / 2; // 17
 
     // Ground shadow
@@ -169,39 +179,38 @@ function _catSprite(ctx, s, celebrateTime = 0) {
     ctx.fill();
 
     // ── Body ──────────────────────────────────────────────────────────────
-    ctx.fillStyle = '#8a9e7a';
+    ctx.fillStyle = pal.body;
     ctx.fillRect(-h + 5, -2, s - 10, h + 2);
 
     // Belly (lighter patch)
-    ctx.fillStyle = '#b2ca9c';
+    ctx.fillStyle = pal.belly;
     ctx.beginPath();
     ctx.ellipse(0, h / 3, h - 10, h / 2 - 2, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Tabby stripes
-    ctx.fillStyle = 'rgba(76, 96, 60, 0.55)';
+    ctx.fillStyle = pal.stripe;
     ctx.fillRect(-h + 7,  0, 2, h - 2);
     ctx.fillRect(-h + 11, 0, 2, h - 2);
     ctx.fillRect(h - 9,   0, 2, h - 2);
 
     // ── Head ──────────────────────────────────────────────────────────────
-    // Head: round, overlaps top of body
-    ctx.fillStyle = '#96ae84';
+    ctx.fillStyle = pal.head;
     ctx.beginPath();
     ctx.arc(0, -5, 12, 0, Math.PI * 2);
     ctx.fill();
 
-    // ── Ears (pointy triangles — unmistakably cat) ─────────────────────────
+    // ── Ears ──────────────────────────────────────────────────────────────
     // Left ear outer
-    ctx.fillStyle = '#7a9068';
+    ctx.fillStyle = pal.ear;
     ctx.beginPath();
-    ctx.moveTo(-10, -10);   // base left
-    ctx.lineTo(-5,  -5);    // base right
-    ctx.lineTo(-14, -19);   // pointed tip
+    ctx.moveTo(-10, -10);
+    ctx.lineTo(-5,  -5);
+    ctx.lineTo(-14, -19);
     ctx.closePath();
     ctx.fill();
     // Left ear inner
-    ctx.fillStyle = '#c07878';
+    ctx.fillStyle = pal.earIn;
     ctx.beginPath();
     ctx.moveTo(-9,  -11);
     ctx.lineTo(-6,  -7);
@@ -210,7 +219,7 @@ function _catSprite(ctx, s, celebrateTime = 0) {
     ctx.fill();
 
     // Right ear outer
-    ctx.fillStyle = '#7a9068';
+    ctx.fillStyle = pal.ear;
     ctx.beginPath();
     ctx.moveTo(10,  -10);
     ctx.lineTo(5,   -5);
@@ -218,7 +227,7 @@ function _catSprite(ctx, s, celebrateTime = 0) {
     ctx.closePath();
     ctx.fill();
     // Right ear inner
-    ctx.fillStyle = '#c07878';
+    ctx.fillStyle = pal.earIn;
     ctx.beginPath();
     ctx.moveTo(9,   -11);
     ctx.lineTo(6,   -7);
@@ -271,7 +280,7 @@ function _catSprite(ctx, s, celebrateTime = 0) {
 
     // ── Tail (bezier curve) ───────────────────────────────────────────────
     const curl = celebrateTime > 0 ? Math.sin(celebrateTime * 6) * 5 : 0;
-    ctx.strokeStyle = '#7a9068';
+    ctx.strokeStyle = pal.tail;
     ctx.lineWidth   = 3;
     ctx.lineCap     = 'round';
     ctx.beginPath();
@@ -283,7 +292,7 @@ function _catSprite(ctx, s, celebrateTime = 0) {
     );
     ctx.stroke();
     // Tail tip (slightly lighter)
-    ctx.strokeStyle = '#96ae84';
+    ctx.strokeStyle = pal.tailTip;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(13 + curl, h + 7);
