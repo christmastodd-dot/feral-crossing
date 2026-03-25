@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, LIVES_START, HONK_TIME } from './config.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, GAME_TOP, LIVES_START, HONK_TIME } from './config.js';
 
 // Score pop animation state (module-level, lightweight)
 let _prevScore     = 0;
@@ -12,7 +12,7 @@ export function drawHUD(ctx, { score, lives, crossings, timer }) {
 
   // ── Top bar ─────────────────────────────────────────────────────────────
   ctx.fillStyle = 'rgba(0,0,0,0.65)';
-  _roundRect(ctx, 0, 0, CANVAS_WIDTH, 28, 0);
+  _roundRect(ctx, 0, 0, CANVAS_WIDTH, GAME_TOP, 0);
 
   // Score with pop scale
   const popScale = _scorePopTimer > 0
@@ -51,7 +51,7 @@ export function drawHUD(ctx, { score, lives, crossings, timer }) {
 
   // ── Bottom bar ─────────────────────────────────────────────────────────
   ctx.fillStyle = 'rgba(0,0,0,0.65)';
-  _roundRect(ctx, 0, CANVAS_HEIGHT - 26, CANVAS_WIDTH, 26, 0);
+  _roundRect(ctx, 0, CANVAS_HEIGHT - GAME_TOP, CANVAS_WIDTH, GAME_TOP, 0);
 
   ctx.fillStyle = '#888';
   ctx.font      = '11px monospace';

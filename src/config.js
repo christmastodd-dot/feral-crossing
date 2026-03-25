@@ -1,6 +1,7 @@
-export const TILE_SIZE = 48;
-export const CANVAS_WIDTH = 800;
-export const CANVAS_HEIGHT = 12 * TILE_SIZE; // 576
+export const TILE_SIZE   = 48;
+export const GAME_TOP    = 30; // px above game grid reserved for top HUD bar
+export const CANVAS_WIDTH  = 800;
+export const CANVAS_HEIGHT = 12 * TILE_SIZE + 2 * GAME_TOP; // 636
 
 export const NUM_LANES = 10;
 export const END_ROW = 0;    // safe zone top

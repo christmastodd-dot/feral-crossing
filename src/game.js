@@ -1,5 +1,5 @@
 import {
-  CANVAS_WIDTH, CANVAS_HEIGHT, TILE_SIZE, COLS,
+  CANVAS_WIDTH, CANVAS_HEIGHT, TILE_SIZE, COLS, GAME_TOP,
   LIVES_START, DEATH_DURATION, CELEBRATE_DURATION,
   TIME_LIMIT, END_ROW, START_ROW, CAT_SIZE, TRUCK_WIDTH,
   NEAR_MISS_EXPAND, NEAR_MISS_BONUS,
@@ -375,12 +375,13 @@ export class Game {
     if (this.state === 'title')          { this._drawTitle();        return; }
     if (this.state === 'gameover')       { this._drawGameOver();     return; }
 
-    // Screen shake
+    // Screen shake — game world sits below the HUD strip (GAME_TOP offset)
     const sx = this.shakeAmt > 0 ? (Math.random() - 0.5) * this.shakeAmt * 2 : 0;
     const sy = this.shakeAmt > 0 ? (Math.random() - 0.5) * this.shakeAmt * 2 : 0;
 
+    // ── Game world (road, cat, trucks, fish, particles) ───────────────────
     ctx.save();
-    ctx.translate(sx, sy);
+    ctx.translate(sx, sy + GAME_TOP);
 
     this.background.draw(ctx);
     this.lanes.draw(ctx);
@@ -392,12 +393,13 @@ export class Game {
     this.particles.draw(ctx);
     this._drawFloats(ctx);
 
-    drawHUD(ctx, { score: this.score, lives: this.lives, crossings: this.crossings, timer: this.timer });
+    ctx.restore();
 
+    // ── Screen-space overlays (not offset, not shaken) ────────────────────
     if (this.state === 'celebrating') this._drawCelebrateOverlay(ctx);
     if (this.state === 'paused')      this._drawPauseMenu(ctx);
 
-    ctx.restore();
+    drawHUD(ctx, { score: this.score, lives: this.lives, crossings: this.crossings, timer: this.timer });
   }
 
   _drawFishItem(ctx) {
@@ -591,7 +593,7 @@ export class Game {
     c.fillStyle   = '#ffe000';
     c.font        = 'bold 34px monospace';
     c.textAlign   = 'center';
-    c.fillText('CHOOSE YOUR CAT', CANVAS_WIDTH / 2, 72);
+    c.fillText('CHOOSE YOUR FERAL CAT', CANVAS_WIDTH / 2, 72);
     c.restore();
 
     c.fillStyle = '#666';

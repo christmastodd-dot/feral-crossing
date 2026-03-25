@@ -1,6 +1,7 @@
-﻿const TILE_SIZE = 48;
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 12 * TILE_SIZE; // 576
+﻿const TILE_SIZE   = 48;
+const GAME_TOP    = 30; // px above game grid reserved for top HUD bar
+const CANVAS_WIDTH  = 800;
+const CANVAS_HEIGHT = 12 * TILE_SIZE + 2 * GAME_TOP; // 636
 
 const NUM_LANES = 10;
 const END_ROW = 0;    // safe zone top
@@ -119,9 +120,9 @@ class PowerLineLayer {
 // Hawaii highway sign pool â€” each entry is an array of lines
 const SIGN_POOL = [
   ['LIHUE', 'NEXT LEFT'],
-  ['W KAUAI TRLR PK', '5 MILES'],
-  ['EVSLIN BIRD PK', 'CLOSED'],
-  ['LIHUE ADU MUS', 'NEXT RIGHT'],
+  ['W KAUAI', 'TRAILER PARK', '5 MILES'],
+  ['EVSLIN', 'BIRD PARK', 'CLOSED'],
+  ['LIHUE ADU', 'MUSEUM', 'NEXT RIGHT'],
 ];
 
 class SignLayer {
@@ -160,7 +161,7 @@ class SignLayer {
     for (const s of this.signs) {
       if (s.x < -130 || s.x > CANVAS_WIDTH + 10) continue;
       const lines  = s.lines;
-      const signW  = 94;
+      const signW  = 108;
       const lineH  = 10;
       const signH  = lines.length * lineH + 10; // dynamic height
       const signY  = s.row === 0 ? 4 : 11 * TILE_SIZE + 4;
@@ -1669,7 +1670,7 @@ function drawHUD(ctx, { score, lives, crossings, timer }) {
 
   // â”€â”€ Top bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   ctx.fillStyle = 'rgba(0,0,0,0.65)';
-  _roundRect(ctx, 0, 0, CANVAS_WIDTH, 28, 0);
+  _roundRect(ctx, 0, 0, CANVAS_WIDTH, GAME_TOP, 0);
 
   // Score with pop scale
   const popScale = _scorePopTimer > 0
@@ -1708,7 +1709,7 @@ function drawHUD(ctx, { score, lives, crossings, timer }) {
 
   // â”€â”€ Bottom bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   ctx.fillStyle = 'rgba(0,0,0,0.65)';
-  _roundRect(ctx, 0, CANVAS_HEIGHT - 26, CANVAS_WIDTH, 26, 0);
+  _roundRect(ctx, 0, CANVAS_HEIGHT - GAME_TOP, CANVAS_WIDTH, GAME_TOP, 0);
 
   ctx.fillStyle = '#888';
   ctx.font      = '11px monospace';
@@ -2167,12 +2168,13 @@ class Game {
     if (this.state === 'title')          { this._drawTitle();        return; }
     if (this.state === 'gameover')       { this._drawGameOver();     return; }
 
-    // Screen shake
+    // Screen shake â€” game world sits below the HUD strip (GAME_TOP offset)
     const sx = this.shakeAmt > 0 ? (Math.random() - 0.5) * this.shakeAmt * 2 : 0;
     const sy = this.shakeAmt > 0 ? (Math.random() - 0.5) * this.shakeAmt * 2 : 0;
 
+    // â”€â”€ Game world (road, cat, trucks, fish, particles) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     ctx.save();
-    ctx.translate(sx, sy);
+    ctx.translate(sx, sy + GAME_TOP);
 
     this.background.draw(ctx);
     this.lanes.draw(ctx);
@@ -2184,12 +2186,13 @@ class Game {
     this.particles.draw(ctx);
     this._drawFloats(ctx);
 
-    drawHUD(ctx, { score: this.score, lives: this.lives, crossings: this.crossings, timer: this.timer });
+    ctx.restore();
 
+    // â”€â”€ Screen-space overlays (not offset, not shaken) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (this.state === 'celebrating') this._drawCelebrateOverlay(ctx);
     if (this.state === 'paused')      this._drawPauseMenu(ctx);
 
-    ctx.restore();
+    drawHUD(ctx, { score: this.score, lives: this.lives, crossings: this.crossings, timer: this.timer });
   }
 
   _drawFishItem(ctx) {
@@ -2383,7 +2386,7 @@ class Game {
     c.fillStyle   = '#ffe000';
     c.font        = 'bold 34px monospace';
     c.textAlign   = 'center';
-    c.fillText('CHOOSE YOUR CAT', CANVAS_WIDTH / 2, 72);
+    c.fillText('CHOOSE YOUR FERAL CAT', CANVAS_WIDTH / 2, 72);
     c.restore();
 
     c.fillStyle = '#666';

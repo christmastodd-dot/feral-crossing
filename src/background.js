@@ -61,9 +61,9 @@ class PowerLineLayer {
 // Hawaii highway sign pool — each entry is an array of lines
 const SIGN_POOL = [
   ['LIHUE', 'NEXT LEFT'],
-  ['W KAUAI TRLR PK', '5 MILES'],
-  ['EVSLIN BIRD PK', 'CLOSED'],
-  ['LIHUE ADU MUS', 'NEXT RIGHT'],
+  ['W KAUAI', 'TRAILER PARK', '5 MILES'],
+  ['EVSLIN', 'BIRD PARK', 'CLOSED'],
+  ['LIHUE ADU', 'MUSEUM', 'NEXT RIGHT'],
 ];
 
 class SignLayer {
@@ -102,7 +102,7 @@ class SignLayer {
     for (const s of this.signs) {
       if (s.x < -130 || s.x > CANVAS_WIDTH + 10) continue;
       const lines  = s.lines;
-      const signW  = 94;
+      const signW  = 108;
       const lineH  = 10;
       const signH  = lines.length * lineH + 10; // dynamic height
       const signY  = s.row === 0 ? 4 : 11 * TILE_SIZE + 4;
