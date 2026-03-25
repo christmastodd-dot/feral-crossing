@@ -2199,7 +2199,6 @@ class Game {
     if (!this._fish || this._fish.collected) return;
     const cx = this._fish.gridCol * TILE_SIZE + TILE_SIZE / 2;
     const cy = this._fish.gridRow * TILE_SIZE + TILE_SIZE / 2;
-    const s  = 11; // half-body length
 
     ctx.save();
     // Pulse glow
@@ -2207,37 +2206,41 @@ class Game {
     ctx.shadowColor = '#ffdd00';
     ctx.shadowBlur  = 10 * pulse;
 
-    // Tail (fan pointing left, fish faces right)
+    // Same shape as HUD life fish, scaled ~1.7Ã— and recoloured orange
+    const sc = 1.7; // scale factor relative to hud fish (body radii 9,5)
+
+    // Body
+    ctx.fillStyle = '#ff8c00';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, 9 * sc, 5 * sc, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tail fin (right side, same triangle as HUD)
     ctx.fillStyle = '#e06000';
     ctx.beginPath();
-    ctx.moveTo(cx - s + 1, cy - s * 0.52);
-    ctx.lineTo(cx - s + 1, cy + s * 0.52);
-    ctx.lineTo(cx - s - 7,  cy);
+    ctx.moveTo(cx + 8  * sc, cy);
+    ctx.lineTo(cx + 16 * sc, cy - 6 * sc);
+    ctx.lineTo(cx + 16 * sc, cy + 6 * sc);
     ctx.closePath();
     ctx.fill();
 
-    // Body ellipse
-    ctx.fillStyle = '#ff8c00';
+    // Dorsal fin
+    ctx.fillStyle = '#cc5500';
     ctx.beginPath();
-    ctx.ellipse(cx + 1, cy, s, s * 0.58, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Belly highlight
-    ctx.fillStyle = '#ffcc44';
-    ctx.beginPath();
-    ctx.ellipse(cx + 2, cy + 2, s * 0.65, s * 0.28, 0, 0, Math.PI * 2);
+    ctx.moveTo(cx - 2 * sc, cy - 4 * sc);
+    ctx.lineTo(cx + 3 * sc, cy - 8 * sc);
+    ctx.lineTo(cx + 8 * sc, cy - 4 * sc);
+    ctx.closePath();
     ctx.fill();
 
     // Eye
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#111';
     ctx.beginPath();
-    ctx.arc(cx + s * 0.56, cy - 1, 1.9, 0, Math.PI * 2);
+    ctx.arc(cx - 4 * sc, cy - 1 * sc, 1.8 * sc, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(cx + s * 0.56 + 0.5, cy - 1.5, 0.7, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fillRect(cx - 6 * sc, cy - 3 * sc, 3 * sc, 2 * sc);
 
     ctx.restore();
   }
