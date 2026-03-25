@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feral Crossing</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      /* Render at native res; browser scales via CSS for crisp pixels */
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      /* Cap to viewport while keeping aspect ratio */
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="800" height="576"></canvas>
+  <script src="main.js"></script>
+</body>
+</html>
