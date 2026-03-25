@@ -1108,7 +1108,9 @@ function _catSprite(ctx, s, celebrateTime = 0, pal = CAT_PALETTES[0]) {
 
     // â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     ctx.fillStyle = pal.body;
-    ctx.fillRect(-h + 5, -2, s - 10, h + 2);
+    ctx.beginPath();
+    ctx.roundRect(-h + 5, -2, s - 10, h + 2, 5);
+    ctx.fill();
 
     // Belly (lighter patch)
     ctx.fillStyle = pal.belly;
@@ -2298,7 +2300,7 @@ class Game {
     ctx.fillText('Cross 10 lanes of bald-driver traffic.', CANVAS_WIDTH / 2, 130);
     ctx.fillText("Don't get smushed.", CANVAS_WIDTH / 2, 152);
 
-    _drawTitleCat(ctx, CANVAS_WIDTH / 2 - 17, CANVAS_HEIGHT * 0.54, 34);
+    _drawTitleCat(ctx, CANVAS_WIDTH / 2 - 17, CANVAS_HEIGHT * 0.54, 34, CAT_PALETTES[this._selectedCat]);
     _drawTitleSign(ctx, CANVAS_WIDTH * 0.72, CANVAS_HEIGHT * 0.46);
 
     // High score display
@@ -2402,11 +2404,10 @@ class Game {
 
 // â”€â”€ Title screen helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-function _drawTitleCat(ctx, x, y, s) {
-  // x,y = top-left corner; s = size. Use the same sprite as gameplay.
+function _drawTitleCat(ctx, x, y, s, pal) {
   ctx.save();
   ctx.translate(x + s / 2, y + s / 2);
-  _catSprite(ctx, s, 0);
+  _catSprite(ctx, s, 0, pal);
   ctx.restore();
 }
 

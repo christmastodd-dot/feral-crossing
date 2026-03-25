@@ -180,7 +180,9 @@ function _catSprite(ctx, s, celebrateTime = 0, pal = CAT_PALETTES[0]) {
 
     // ── Body ──────────────────────────────────────────────────────────────
     ctx.fillStyle = pal.body;
-    ctx.fillRect(-h + 5, -2, s - 10, h + 2);
+    ctx.beginPath();
+    ctx.roundRect(-h + 5, -2, s - 10, h + 2, 5);
+    ctx.fill();
 
     // Belly (lighter patch)
     ctx.fillStyle = pal.belly;
