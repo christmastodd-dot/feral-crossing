@@ -1,5 +1,5 @@
 import {
-  CANVAS_WIDTH, CANVAS_HEIGHT, TILE_SIZE,
+  CANVAS_WIDTH, CANVAS_HEIGHT, TILE_SIZE, COLS,
   LIVES_START, DEATH_DURATION, CELEBRATE_DURATION,
   TIME_LIMIT, END_ROW, START_ROW, CAT_SIZE, TRUCK_WIDTH,
   NEAR_MISS_EXPAND, NEAR_MISS_BONUS,
@@ -56,6 +56,9 @@ export class Game {
 
     // Ambient meow timer (seconds until next soft meow)
     this._meowTimer = 10 + Math.random() * 10;
+
+    // Fish +1 life item
+    this._fish = null;
 
     this._bindInput();
   }
@@ -172,6 +175,8 @@ export class Game {
     this.crossings = 0;
     this.timer     = TIME_LIMIT;
     this.shakeAmt  = 0;
+    this._fish     = null;
+    this.background.refreshSigns();
     this.state     = 'playing';
     this.audio.startMusic();
   }
@@ -218,7 +223,17 @@ export class Game {
     this.lanes.reset();
     this.lanes.populate();
     this.timer = TIME_LIMIT;
+    this._fish = (this.crossings > 0 && this.crossings % 4 === 0) ? this._makeFish() : null;
+    this.background.refreshSigns();
     this.state = 'playing';
+  }
+
+  _makeFish() {
+    return {
+      gridCol:   Math.floor(Math.random() * COLS),
+      gridRow:   1 + Math.floor(Math.random() * 9), // rows 1-9 (inside lanes)
+      collected: false,
+    };
   }
 
   // ── Engine audio helper ───────────────────────────────────────────────────
@@ -282,6 +297,16 @@ export class Game {
 
     // Win condition
     if (this.cat.gridRow === END_ROW) { this._celebrate(); return; }
+
+    // Fish collection
+    if (this._fish && !this._fish.collected &&
+        this.cat.gridCol === this._fish.gridCol &&
+        this.cat.gridRow === this._fish.gridRow) {
+      this._fish.collected = true;
+      this.lives++;
+      this.audio.playMeow();
+      this._floats.push({ text: '+1 LIFE!', x: this.cat.x + CAT_SIZE / 2, y: this.cat.y, color: '#44ff88', life: 1.4 });
+    }
 
     // Collision + near-miss detection (only while in a lane row)
     if (this.cat.gridRow > END_ROW && this.cat.gridRow < START_ROW) {
@@ -359,6 +384,7 @@ export class Game {
 
     this.background.draw(ctx);
     this.lanes.draw(ctx);
+    this._drawFishItem(ctx);
 
     const celebTime = this.state === 'celebrating' ? CELEBRATE_DURATION - this._celebrateTimer : 0;
     this.cat.draw(ctx, celebTime);
@@ -370,6 +396,53 @@ export class Game {
 
     if (this.state === 'celebrating') this._drawCelebrateOverlay(ctx);
     if (this.state === 'paused')      this._drawPauseMenu(ctx);
+
+    ctx.restore();
+  }
+
+  _drawFishItem(ctx) {
+    if (!this._fish || this._fish.collected) return;
+    const cx = this._fish.gridCol * TILE_SIZE + TILE_SIZE / 2;
+    const cy = this._fish.gridRow * TILE_SIZE + TILE_SIZE / 2;
+    const s  = 11; // half-body length
+
+    ctx.save();
+    // Pulse glow
+    const pulse = 0.55 + 0.45 * Math.sin(performance.now() / 280);
+    ctx.shadowColor = '#ffdd00';
+    ctx.shadowBlur  = 10 * pulse;
+
+    // Tail (fan pointing left, fish faces right)
+    ctx.fillStyle = '#e06000';
+    ctx.beginPath();
+    ctx.moveTo(cx - s + 1, cy - s * 0.52);
+    ctx.lineTo(cx - s + 1, cy + s * 0.52);
+    ctx.lineTo(cx - s - 7,  cy);
+    ctx.closePath();
+    ctx.fill();
+
+    // Body ellipse
+    ctx.fillStyle = '#ff8c00';
+    ctx.beginPath();
+    ctx.ellipse(cx + 1, cy, s, s * 0.58, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Belly highlight
+    ctx.fillStyle = '#ffcc44';
+    ctx.beginPath();
+    ctx.ellipse(cx + 2, cy + 2, s * 0.65, s * 0.28, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(cx + s * 0.56, cy - 1, 1.9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx + s * 0.56 + 0.5, cy - 1.5, 0.7, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }

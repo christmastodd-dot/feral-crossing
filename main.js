@@ -116,18 +116,32 @@ class PowerLineLayer {
   }
 }
 
+// Hawaii highway sign pool â€” each entry is an array of lines
+const SIGN_POOL = [
+  ['LIHUE', 'NEXT LEFT'],
+  ['W KAUAI TRLR PK', '5 MILES'],
+  ['EVSLIN BIRD PK', 'CLOSED'],
+  ['LIHUE ADU MUS', 'NEXT RIGHT'],
+];
+
 class SignLayer {
   constructor() {
     this.speed = 26;
-    // Each sign: { x, row: 0=top safe zone / 1=bottom safe zone, label }
-    const labels = ['EXIT 42', 'HWY 666', 'REST AREA', 'GAS FOOD', 'NEXT EXIT'];
     this.signs = [];
     for (let i = 0; i < 4; i++) {
       this.signs.push({
-        x: i * 220 + Math.random() * 80,
-        row: i % 2,
-        label: labels[i % labels.length],
+        x:     i * 220 + Math.random() * 80,
+        row:   i % 2,
+        lines: SIGN_POOL[i],
       });
+    }
+  }
+
+  // Call at the start of each crossing to randomise which signs appear
+  refresh() {
+    const shuffled = [...SIGN_POOL].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < this.signs.length; i++) {
+      this.signs[i].lines = shuffled[i % shuffled.length];
     }
   }
 
@@ -137,36 +151,42 @@ class SignLayer {
     const leftmost  = this.signs.reduce((a, b) => a.x < b.x ? a : b);
     if (leftmost.x < -120) {
       leftmost.x = rightmost.x + 200 + Math.random() * 120;
+      // Assign a fresh random label when a sign wraps back on
+      leftmost.lines = SIGN_POOL[Math.floor(Math.random() * SIGN_POOL.length)];
     }
   }
 
   draw(ctx) {
     for (const s of this.signs) {
       if (s.x < -130 || s.x > CANVAS_WIDTH + 10) continue;
-      const y = s.row === 0 ? 4 : 11 * TILE_SIZE + 4;
-      const signH = TILE_SIZE - 12;
-      const signW = 90;
-      const signY = y;
+      const lines  = s.lines;
+      const signW  = 94;
+      const lineH  = 10;
+      const signH  = lines.length * lineH + 10; // dynamic height
+      const signY  = s.row === 0 ? 4 : 11 * TILE_SIZE + 4;
+      const cx     = s.x + signW / 2;
 
       // Post
       ctx.fillStyle = '#555';
-      ctx.fillRect(s.x + signW / 2 - 2, signY, 4, signH + 4);
+      ctx.fillRect(cx - 2, signY, 4, signH + 4);
 
-      // Sign board (green highway sign)
-      ctx.fillStyle = '#1a5c2a';
-      ctx.fillRect(s.x, signY, signW, signH - 4);
-      // Border
+      // Sign board â€” royal blue
+      ctx.fillStyle = '#1a3a9c';
+      ctx.fillRect(s.x, signY, signW, signH);
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(s.x + 2, signY + 2, signW - 4, signH - 8);
+      ctx.strokeRect(s.x + 2, signY + 2, signW - 4, signH - 4);
 
-      // Text
+      // Text lines
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 8px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(s.label, s.x + signW / 2, signY + signH / 2 - 2);
+      const textStartY = signY + (signH - lines.length * lineH) / 2 + lineH - 1;
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], cx, textStartY + i * lineH);
+      }
     }
-    ctx.textAlign = 'left'; // restore default
+    ctx.textAlign = 'left';
   }
 }
 
@@ -272,6 +292,8 @@ class Background {
     this._signs      = new SignLayer();
     this._brush      = new BrushLayer();
   }
+
+  refreshSigns() { this._signs.refresh(); }
 
   update(dt) {
     this._powerLines.update(dt);
@@ -1827,6 +1849,9 @@ class Game {
     // Ambient meow timer (seconds until next soft meow)
     this._meowTimer = 10 + Math.random() * 10;
 
+    // Fish +1 life item
+    this._fish = null;
+
     this._bindInput();
   }
 
@@ -1942,6 +1967,8 @@ class Game {
     this.crossings = 0;
     this.timer     = TIME_LIMIT;
     this.shakeAmt  = 0;
+    this._fish     = null;
+    this.background.refreshSigns();
     this.state     = 'playing';
     this.audio.startMusic();
   }
@@ -1988,7 +2015,17 @@ class Game {
     this.lanes.reset();
     this.lanes.populate();
     this.timer = TIME_LIMIT;
+    this._fish = (this.crossings > 0 && this.crossings % 4 === 0) ? this._makeFish() : null;
+    this.background.refreshSigns();
     this.state = 'playing';
+  }
+
+  _makeFish() {
+    return {
+      gridCol:   Math.floor(Math.random() * COLS),
+      gridRow:   1 + Math.floor(Math.random() * 9), // rows 1-9 (inside lanes)
+      collected: false,
+    };
   }
 
   // â”€â”€ Engine audio helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -2052,6 +2089,16 @@ class Game {
 
     // Win condition
     if (this.cat.gridRow === END_ROW) { this._celebrate(); return; }
+
+    // Fish collection
+    if (this._fish && !this._fish.collected &&
+        this.cat.gridCol === this._fish.gridCol &&
+        this.cat.gridRow === this._fish.gridRow) {
+      this._fish.collected = true;
+      this.lives++;
+      this.audio.playMeow();
+      this._floats.push({ text: '+1 LIFE!', x: this.cat.x + CAT_SIZE / 2, y: this.cat.y, color: '#44ff88', life: 1.4 });
+    }
 
     // Collision + near-miss detection (only while in a lane row)
     if (this.cat.gridRow > END_ROW && this.cat.gridRow < START_ROW) {
@@ -2129,6 +2176,7 @@ class Game {
 
     this.background.draw(ctx);
     this.lanes.draw(ctx);
+    this._drawFishItem(ctx);
 
     const celebTime = this.state === 'celebrating' ? CELEBRATE_DURATION - this._celebrateTimer : 0;
     this.cat.draw(ctx, celebTime);
@@ -2140,6 +2188,53 @@ class Game {
 
     if (this.state === 'celebrating') this._drawCelebrateOverlay(ctx);
     if (this.state === 'paused')      this._drawPauseMenu(ctx);
+
+    ctx.restore();
+  }
+
+  _drawFishItem(ctx) {
+    if (!this._fish || this._fish.collected) return;
+    const cx = this._fish.gridCol * TILE_SIZE + TILE_SIZE / 2;
+    const cy = this._fish.gridRow * TILE_SIZE + TILE_SIZE / 2;
+    const s  = 11; // half-body length
+
+    ctx.save();
+    // Pulse glow
+    const pulse = 0.55 + 0.45 * Math.sin(performance.now() / 280);
+    ctx.shadowColor = '#ffdd00';
+    ctx.shadowBlur  = 10 * pulse;
+
+    // Tail (fan pointing left, fish faces right)
+    ctx.fillStyle = '#e06000';
+    ctx.beginPath();
+    ctx.moveTo(cx - s + 1, cy - s * 0.52);
+    ctx.lineTo(cx - s + 1, cy + s * 0.52);
+    ctx.lineTo(cx - s - 7,  cy);
+    ctx.closePath();
+    ctx.fill();
+
+    // Body ellipse
+    ctx.fillStyle = '#ff8c00';
+    ctx.beginPath();
+    ctx.ellipse(cx + 1, cy, s, s * 0.58, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Belly highlight
+    ctx.fillStyle = '#ffcc44';
+    ctx.beginPath();
+    ctx.ellipse(cx + 2, cy + 2, s * 0.65, s * 0.28, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.arc(cx + s * 0.56, cy - 1, 1.9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx + s * 0.56 + 0.5, cy - 1.5, 0.7, 0, Math.PI * 2);
+    ctx.fill();
 
     ctx.restore();
   }

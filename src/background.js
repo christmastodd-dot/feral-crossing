@@ -58,18 +58,32 @@ class PowerLineLayer {
   }
 }
 
+// Hawaii highway sign pool — each entry is an array of lines
+const SIGN_POOL = [
+  ['LIHUE', 'NEXT LEFT'],
+  ['W KAUAI TRLR PK', '5 MILES'],
+  ['EVSLIN BIRD PK', 'CLOSED'],
+  ['LIHUE ADU MUS', 'NEXT RIGHT'],
+];
+
 class SignLayer {
   constructor() {
     this.speed = 26;
-    // Each sign: { x, row: 0=top safe zone / 1=bottom safe zone, label }
-    const labels = ['EXIT 42', 'HWY 666', 'REST AREA', 'GAS FOOD', 'NEXT EXIT'];
     this.signs = [];
     for (let i = 0; i < 4; i++) {
       this.signs.push({
-        x: i * 220 + Math.random() * 80,
-        row: i % 2,
-        label: labels[i % labels.length],
+        x:     i * 220 + Math.random() * 80,
+        row:   i % 2,
+        lines: SIGN_POOL[i],
       });
+    }
+  }
+
+  // Call at the start of each crossing to randomise which signs appear
+  refresh() {
+    const shuffled = [...SIGN_POOL].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < this.signs.length; i++) {
+      this.signs[i].lines = shuffled[i % shuffled.length];
     }
   }
 
@@ -79,36 +93,42 @@ class SignLayer {
     const leftmost  = this.signs.reduce((a, b) => a.x < b.x ? a : b);
     if (leftmost.x < -120) {
       leftmost.x = rightmost.x + 200 + Math.random() * 120;
+      // Assign a fresh random label when a sign wraps back on
+      leftmost.lines = SIGN_POOL[Math.floor(Math.random() * SIGN_POOL.length)];
     }
   }
 
   draw(ctx) {
     for (const s of this.signs) {
       if (s.x < -130 || s.x > CANVAS_WIDTH + 10) continue;
-      const y = s.row === 0 ? 4 : 11 * TILE_SIZE + 4;
-      const signH = TILE_SIZE - 12;
-      const signW = 90;
-      const signY = y;
+      const lines  = s.lines;
+      const signW  = 94;
+      const lineH  = 10;
+      const signH  = lines.length * lineH + 10; // dynamic height
+      const signY  = s.row === 0 ? 4 : 11 * TILE_SIZE + 4;
+      const cx     = s.x + signW / 2;
 
       // Post
       ctx.fillStyle = '#555';
-      ctx.fillRect(s.x + signW / 2 - 2, signY, 4, signH + 4);
+      ctx.fillRect(cx - 2, signY, 4, signH + 4);
 
-      // Sign board (green highway sign)
-      ctx.fillStyle = '#1a5c2a';
-      ctx.fillRect(s.x, signY, signW, signH - 4);
-      // Border
+      // Sign board — royal blue
+      ctx.fillStyle = '#1a3a9c';
+      ctx.fillRect(s.x, signY, signW, signH);
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(s.x + 2, signY + 2, signW - 4, signH - 8);
+      ctx.strokeRect(s.x + 2, signY + 2, signW - 4, signH - 4);
 
-      // Text
+      // Text lines
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 8px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(s.label, s.x + signW / 2, signY + signH / 2 - 2);
+      const textStartY = signY + (signH - lines.length * lineH) / 2 + lineH - 1;
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], cx, textStartY + i * lineH);
+      }
     }
-    ctx.textAlign = 'left'; // restore default
+    ctx.textAlign = 'left';
   }
 }
 
@@ -214,6 +234,8 @@ export class Background {
     this._signs      = new SignLayer();
     this._brush      = new BrushLayer();
   }
+
+  refreshSigns() { this._signs.refresh(); }
 
   update(dt) {
     this._powerLines.update(dt);
