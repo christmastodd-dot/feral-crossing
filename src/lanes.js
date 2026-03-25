@@ -30,11 +30,14 @@ export class LaneManager {
     for (let i = 0; i < NUM_LANES; i++) {
       const cfg   = LANE_CONFIGS[i];
       const speed = cfg.speed * this._speedMult;
-      // Spread 1-2 trucks across the road per lane
       const count = 1 + Math.floor(Math.random() * 2);
+      // Divide road into equal slots — one truck per slot, guaranteed no overlap
+      const slotW = Math.floor(CANVAS_WIDTH / count);
       for (let j = 0; j < count; j++) {
-        const truck = new Truck(i, cfg.direction, speed);
-        truck.x = Math.floor(Math.random() * (CANVAS_WIDTH - TRUCK_WIDTH));
+        const truck     = new Truck(i, cfg.direction, speed);
+        const slotStart = j * slotW;
+        const maxOffset = Math.max(0, slotW - TRUCK_WIDTH - 20); // 20px buffer between slots
+        truck.x = slotStart + Math.floor(Math.random() * maxOffset);
         this.trucks.push(truck);
       }
     }
