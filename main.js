@@ -769,8 +769,8 @@ class Truck {
       ctx.fillRect(wx + 8, y + h - 6, 2, 3);
     }
 
-    // Door drawn last (on top of wheels) so it's never cut off
-    const doorX = dir === 1 ? x + w - 22 : x + 4;
+    // Door drawn last â€” positioned between the two wheel axles
+    const doorX = dir === 1 ? x + 30 : x + 48;
     ctx.fillStyle = pal.door;
     ctx.fillRect(doorX, y + h - 18, 13, 18);
     ctx.strokeStyle = 'rgba(0,0,0,0.3)';
