@@ -945,7 +945,6 @@ const CAT_PALETTES = [
   { name: 'Orange',       body: '#cc7733', head: '#dd8844', ear: '#b86020', earIn: '#e09070', belly: '#f0a855', stripe: 'rgba(140,55,5,0.55)',     tail: '#b86020', tailTip: '#dd8844'  },
   { name: 'Black',        body: '#252525', head: '#303030', ear: '#1a1a1a', earIn: '#a05858', belly: '#3d3d3d', stripe: 'rgba(0,0,0,0.55)',        tail: '#1a1a1a', tailTip: '#383838'  },
   { name: 'White',        body: '#d8d8d8', head: '#ececec', ear: '#c4c4c4', earIn: '#f0a0a8', belly: '#f8f8f8', stripe: 'rgba(160,160,160,0.38)',  tail: '#c4c4c4', tailTip: '#ececec'  },
-  { name: 'Dark Stripe',  body: '#888888', head: '#999999', ear: '#686868', earIn: '#c07878', belly: '#b8b8b8', stripe: 'rgba(20,20,20,0.72)',     tail: '#686868', tailTip: '#999999'  },
 ];
 
 class Cat {
@@ -1109,7 +1108,7 @@ function _catSprite(ctx, s, celebrateTime = 0, pal = CAT_PALETTES[0]) {
     // â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     ctx.fillStyle = pal.body;
     ctx.beginPath();
-    ctx.roundRect(-h + 5, -2, s - 10, h + 2, 5);
+    ctx.ellipse(0, h / 2 - 1, h - 5, h / 2 + 1, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Belly (lighter patch)
@@ -1118,11 +1117,16 @@ function _catSprite(ctx, s, celebrateTime = 0, pal = CAT_PALETTES[0]) {
     ctx.ellipse(0, h / 3, h - 10, h / 2 - 2, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Tabby stripes
+    // Tabby stripes â€” clipped to body ellipse so they don't bleed outside
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, h / 2 - 1, h - 5, h / 2 + 1, 0, 0, Math.PI * 2);
+    ctx.clip();
     ctx.fillStyle = pal.stripe;
     ctx.fillRect(-h + 7,  0, 2, h - 2);
     ctx.fillRect(-h + 11, 0, 2, h - 2);
     ctx.fillRect(h - 9,   0, 2, h - 2);
+    ctx.restore();
 
     // â”€â”€ Head â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     ctx.fillStyle = pal.head;
@@ -2301,7 +2305,8 @@ class Game {
     ctx.fillText("Don't get smushed.", CANVAS_WIDTH / 2, 152);
 
     _drawTitleCat(ctx, CANVAS_WIDTH / 2 - 17, CANVAS_HEIGHT * 0.54, 34, CAT_PALETTES[this._selectedCat]);
-    _drawTitleSign(ctx, CANVAS_WIDTH * 0.72, CANVAS_HEIGHT * 0.46);
+    _drawTitleSign(ctx, CANVAS_WIDTH * 0.72, CANVAS_HEIGHT * 0.46, ['HWY 666']);
+    _drawTitleSign(ctx, CANVAS_WIDTH * 0.26, CANVAS_HEIGHT * 0.50, ['VOTE NO ON', 'HB1736']);
 
     // High score display
     const scores = getScores();
@@ -2411,8 +2416,9 @@ function _drawTitleCat(ctx, x, y, s, pal) {
   ctx.restore();
 }
 
-function _drawTitleSign(ctx, cx, cy) {
-  const w = 80, h = 30;
+function _drawTitleSign(ctx, cx, cy, lines) {
+  const w = 90;
+  const h = lines.length > 1 ? 42 : 30;
   const x = cx - w / 2;
   ctx.fillStyle = '#666';
   ctx.fillRect(cx - 2, cy, 4, h + 10);
@@ -2422,8 +2428,15 @@ function _drawTitleSign(ctx, cx, cy) {
   ctx.lineWidth = 1.5;
   ctx.strokeRect(x + 2, cy - h + 2, w - 4, h - 4);
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 9px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('HWY 666', cx, cy - h / 2 + 3);
+  if (lines.length === 1) {
+    ctx.font = 'bold 9px monospace';
+    ctx.fillText(lines[0], cx, cy - h / 2 + 3);
+  } else {
+    ctx.font = 'bold 8px monospace';
+    const lineH = 11;
+    const startY = cy - h / 2 - ((lines.length - 1) * lineH) / 2 + 2;
+    lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
+  }
 }
 const game = new Game(document.getElementById("game")); game.run();

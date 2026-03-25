@@ -606,7 +606,8 @@ export class Game {
     ctx.fillText("Don't get smushed.", CANVAS_WIDTH / 2, 152);
 
     _drawTitleCat(ctx, CANVAS_WIDTH / 2 - 17, CANVAS_HEIGHT * 0.54, 34, CAT_PALETTES[this._selectedCat]);
-    _drawTitleSign(ctx, CANVAS_WIDTH * 0.72, CANVAS_HEIGHT * 0.46);
+    _drawTitleSign(ctx, CANVAS_WIDTH * 0.72, CANVAS_HEIGHT * 0.46, ['HWY 666']);
+    _drawTitleSign(ctx, CANVAS_WIDTH * 0.26, CANVAS_HEIGHT * 0.50, ['VOTE NO ON', 'HB1736']);
 
     // High score display
     const scores = getScores();
@@ -716,8 +717,9 @@ function _drawTitleCat(ctx, x, y, s, pal) {
   ctx.restore();
 }
 
-function _drawTitleSign(ctx, cx, cy) {
-  const w = 80, h = 30;
+function _drawTitleSign(ctx, cx, cy, lines) {
+  const w = 90;
+  const h = lines.length > 1 ? 42 : 30;
   const x = cx - w / 2;
   ctx.fillStyle = '#666';
   ctx.fillRect(cx - 2, cy, 4, h + 10);
@@ -727,7 +729,14 @@ function _drawTitleSign(ctx, cx, cy) {
   ctx.lineWidth = 1.5;
   ctx.strokeRect(x + 2, cy - h + 2, w - 4, h - 4);
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 9px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('HWY 666', cx, cy - h / 2 + 3);
+  if (lines.length === 1) {
+    ctx.font = 'bold 9px monospace';
+    ctx.fillText(lines[0], cx, cy - h / 2 + 3);
+  } else {
+    ctx.font = 'bold 8px monospace';
+    const lineH = 11;
+    const startY = cy - h / 2 - ((lines.length - 1) * lineH) / 2 + 2;
+    lines.forEach((line, i) => ctx.fillText(line, cx, startY + i * lineH));
+  }
 }
