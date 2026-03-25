@@ -740,9 +740,9 @@ class Truck {
       ctx.fillRect(x + i, y + 5, 1, h - 11);
     }
 
-    // Windows (2 â€” front/cab-side window removed)
-    for (let i = 0; i < 2; i++) {
-      const wx = x + 8 + i * 27;
+    // Two windows â€” positions chosen per direction to clear the door
+    const winXs = dir === 1 ? [x + 8, x + 52] : [x + 8, x + 68];
+    for (const wx of winXs) {
       ctx.fillStyle = pal.window;
       ctx.fillRect(wx, y + 7, 18, 12);
       ctx.strokeStyle = 'rgba(0,0,0,0.3)';
