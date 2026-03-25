@@ -1,4 +1,4 @@
-const LS_KEY = 'feralCrossing_v1_scores';
+const LS_KEY = 'feralCrossing_v2_scores';
 
 export function getScores() {
   try {

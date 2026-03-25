@@ -384,8 +384,8 @@ export class Game {
     ctx.translate(sx, sy + GAME_TOP);
 
     this.background.draw(ctx);
-    this.lanes.draw(ctx);
     this._drawFishItem(ctx);
+    this.lanes.draw(ctx);
 
     const celebTime = this.state === 'celebrating' ? CELEBRATE_DURATION - this._celebrateTimer : 0;
     this.cat.draw(ctx, celebTime);

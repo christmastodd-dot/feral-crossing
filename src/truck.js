@@ -174,50 +174,44 @@ export class Truck {
       ctx.fillRect(x + i, y + 5, 1, h - 11);
     }
 
-    // Windows (3 evenly spaced)
-    for (let i = 0; i < 3; i++) {
+    // Windows (2 — front/cab-side window removed)
+    for (let i = 0; i < 2; i++) {
       const wx = x + 8 + i * 27;
       ctx.fillStyle = pal.window;
       ctx.fillRect(wx, y + 7, 18, 12);
-      // Window frame
       ctx.strokeStyle = 'rgba(0,0,0,0.3)';
       ctx.lineWidth = 1;
       ctx.strokeRect(wx, y + 7, 18, 12);
-      // Window cross
       ctx.beginPath();
       ctx.moveTo(wx + 9, y + 7);  ctx.lineTo(wx + 9, y + 19);
       ctx.moveTo(wx, y + 13);     ctx.lineTo(wx + 18, y + 13);
       ctx.stroke();
     }
 
-    // Door (near the trailing end)
+    // Wheel skirt
+    ctx.fillStyle = pal.stripe;
+    ctx.fillRect(x, y + h - 8, w, 8);
+    // Wheels (two axles)
+    for (const wx of [x + 10, x + w - 28]) {
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(wx, y + h - 9, 18, 9);
+      ctx.fillStyle = '#5a5a5a';
+      ctx.fillRect(wx + 4, y + h - 8, 10, 7);
+      ctx.fillStyle = '#888';
+      ctx.fillRect(wx + 6, y + h - 7, 6, 5);
+      ctx.fillStyle = '#aaa';
+      ctx.fillRect(wx + 8, y + h - 6, 2, 3);
+    }
+
+    // Door drawn last (on top of wheels) so it's never cut off
     const doorX = dir === 1 ? x + w - 22 : x + 4;
     ctx.fillStyle = pal.door;
     ctx.fillRect(doorX, y + h - 18, 13, 18);
     ctx.strokeStyle = 'rgba(0,0,0,0.3)';
     ctx.lineWidth = 1;
     ctx.strokeRect(doorX, y + h - 18, 13, 18);
-    // Door handle
     ctx.fillStyle = '#d4a830';
     ctx.fillRect(dir === 1 ? doorX + 2 : doorX + 9, y + h - 11, 3, 3);
-
-    // Wheel skirt
-    ctx.fillStyle = pal.stripe;
-    ctx.fillRect(x, y + h - 8, w, 8);
-    // Wheels (two axles)
-    for (const wx of [x + 10, x + w - 28]) {
-      // Tire
-      ctx.fillStyle = '#1a1a1a';
-      ctx.fillRect(wx, y + h - 9, 18, 9);
-      // Rim
-      ctx.fillStyle = '#5a5a5a';
-      ctx.fillRect(wx + 4, y + h - 8, 10, 7);
-      ctx.fillStyle = '#888';
-      ctx.fillRect(wx + 6, y + h - 7, 6, 5);
-      // Center hub
-      ctx.fillStyle = '#aaa';
-      ctx.fillRect(wx + 8, y + h - 6, 2, 3);
-    }
   }
 
   // ── Cab rendering ─────────────────────────────────────────────────────
