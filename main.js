@@ -2387,7 +2387,7 @@ class Game {
     ctx.fillText("Don't get smushed.", CANVAS_WIDTH / 2, 152);
 
     _drawTitleCat(ctx, CANVAS_WIDTH / 2 - 17, CANVAS_HEIGHT * 0.54, 34, CAT_PALETTES[this._selectedCat]);
-    _drawTitleSign(ctx, CANVAS_WIDTH * 0.72, CANVAS_HEIGHT * 0.46, ['HWY 666']);
+    _drawTitleSign(ctx, CANVAS_WIDTH * 0.72, CANVAS_HEIGHT * 0.46, ['ROUTE 56']);
     _drawTitleSign(ctx, CANVAS_WIDTH * 0.26, CANVAS_HEIGHT * 0.50, ['VOTE NO ON', 'HB1736']);
 
     // High score display
@@ -2504,7 +2504,7 @@ function _drawTitleSign(ctx, cx, cy, lines) {
   const x = cx - w / 2;
   ctx.fillStyle = '#666';
   ctx.fillRect(cx - 2, cy, 4, h + 10);
-  ctx.fillStyle = '#1a5c2a';
+  ctx.fillStyle = '#1a3a9c';
   ctx.fillRect(x, cy - h, w, h);
   ctx.strokeStyle = '#fff';
   ctx.lineWidth = 1.5;
