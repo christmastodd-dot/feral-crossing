@@ -79,14 +79,16 @@
       bottom: max(16px, env(safe-area-inset-bottom));
       right: max(16px, env(safe-area-inset-right));
       z-index: 10;
-      width: 80px;
-      height: 80px;
-      background: rgba(255,224,0,0.88);
-      border: 3px solid #ffe000;
-      border-radius: 16px;
-      color: #111;
-      font-size: 32px;
-      line-height: 1;
+      padding: 0 22px;
+      height: 56px;
+      background: #2a9a2a;
+      border: 3px solid #44cc44;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      font-family: monospace;
+      letter-spacing: 0.05em;
       cursor: pointer;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
@@ -94,7 +96,7 @@
     }
 
     #btn-confirm:active {
-      background: #fff;
+      background: #3dbb3d;
     }
 
     @media (pointer: coarse) {
@@ -112,7 +114,7 @@
     <button id="btn-down"  aria-label="Down">▼</button>
   </div>
 
-  <button id="btn-confirm" aria-label="Confirm">▶</button>
+  <button id="btn-confirm" aria-label="Confirm">START</button>
 
   <script src="main.js"></script>
   <script>
