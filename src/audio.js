@@ -1,9 +1,30 @@
+// ── Retro chiptune — C major, 128 BPM ────────────────────────────────────────
+// Bass walks the I–V–vi–IV progression; melody is a simple 8-bit ascending run
+const BASS = [
+   65.41,      0,  98.00,      0,   // C2 _ G2 _
+  110.00,      0,  98.00,      0,   // A2 _ G2 _
+   87.31,      0,  82.41,      0,   // F2 _ E2 _
+   98.00,      0,  65.41,      0,   // G2 _ C2 _
+];
+const MELO = [
+  523.25, 587.33, 659.26, 698.46,   // C5 D5 E5 F5  (ascending run)
+  784.00, 659.26, 587.33,      0,   // G5 E5 D5 rest
+  698.46, 784.00, 880.00, 784.00,   // F5 G5 A5 G5  (peak turn-around)
+  659.26, 587.33, 523.25,      0,   // E5 D5 C5 rest
+];
+const STEP = 60 / 128 / 4; // seconds per 16th note at 128 BPM
+
 export class AudioSystem {
   constructor() {
-    this._ctx     = null;
-    this._master  = null;
-    this._engGain = null;
-    this._ready   = false;
+    this._ctx          = null;
+    this._master       = null;
+    this._engGain      = null;
+    this._musicGain    = null;
+    this._musicPlaying = false;
+    this._nextNote     = 0;
+    this._noteIdx      = 0;
+    this._schedId      = null;
+    this._ready        = false;
   }
 
   // Call on first user interaction so Chrome doesn't complain
@@ -24,6 +45,11 @@ export class AudioSystem {
     this._engGain.gain.value = 0;
     this._engGain.connect(this._master);
     this._startEngine();
+
+    // Music channel
+    this._musicGain = ctx.createGain();
+    this._musicGain.gain.value = 0.5;
+    this._musicGain.connect(this._master);
 
     // Background wind/hum
     this._startAmbient();
@@ -271,6 +297,60 @@ export class AudioSystem {
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
     osc.connect(g); g.connect(this._master);
     osc.start(t); osc.stop(t + 0.12);
+  }
+
+  // ── Chiptune music ────────────────────────────────────────────────────────
+
+  startMusic() {
+    if (!this._ready || this._musicPlaying) return;
+    this._musicPlaying = true;
+    this._noteIdx  = 0;
+    this._nextNote = this._ctx.currentTime + 0.08;
+    this._scheduleBatch();
+  }
+
+  stopMusic() {
+    this._musicPlaying = false;
+    if (this._schedId !== null) { clearTimeout(this._schedId); this._schedId = null; }
+  }
+
+  _scheduleBatch() {
+    if (!this._musicPlaying || !this._ready) return;
+    const now = this._ctx.currentTime;
+    while (this._nextNote < now + 0.45) {
+      this._playStep(this._noteIdx, this._nextNote);
+      this._noteIdx  = (this._noteIdx + 1) % BASS.length;
+      this._nextNote += STEP;
+    }
+    this._schedId = setTimeout(() => this._scheduleBatch(), 80);
+  }
+
+  _playStep(idx, t) {
+    const ctx = this._ctx;
+    const bf = BASS[idx];
+    if (bf > 0) {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = bf;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.28, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.001, t + STEP * 1.8);
+      osc.connect(g); g.connect(this._musicGain);
+      osc.start(t); osc.stop(t + STEP * 2);
+    }
+    const mf = MELO[idx];
+    if (mf > 0) {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = mf;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.07, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.001, t + STEP * 0.8);
+      osc.connect(g); g.connect(this._musicGain);
+      osc.start(t); osc.stop(t + STEP);
+    }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
