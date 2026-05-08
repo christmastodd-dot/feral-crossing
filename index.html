@@ -37,7 +37,7 @@
       z-index: 10;
       grid-template-areas:
         ".    up    ."
-        "left mid   right"
+        "left .     right"
         ".    down  .";
       grid-template-columns: 54px 54px 54px;
       grid-template-rows: 54px 54px 54px;
@@ -52,7 +52,6 @@
 
     #btn-up    { grid-area: up; }
     #btn-left  { grid-area: left; }
-    #btn-ok    { grid-area: mid; }
     #btn-right { grid-area: right; }
     #btn-down  { grid-area: down; }
 
@@ -72,6 +71,35 @@
       background: rgba(255,224,0,0.32);
       border-color: rgba(255,224,0,0.65);
     }
+
+    /* Confirm button — prominent, bottom-right, touch only */
+    #btn-confirm {
+      display: none;
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      right: max(16px, env(safe-area-inset-right));
+      z-index: 10;
+      width: 80px;
+      height: 80px;
+      background: rgba(255,224,0,0.88);
+      border: 3px solid #ffe000;
+      border-radius: 16px;
+      color: #111;
+      font-size: 32px;
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    #btn-confirm:active {
+      background: #fff;
+    }
+
+    @media (pointer: coarse) {
+      #btn-confirm { display: flex; align-items: center; justify-content: center; }
+    }
   </style>
 </head>
 <body>
@@ -80,10 +108,11 @@
   <div id="dpad">
     <button id="btn-up"    aria-label="Up">▲</button>
     <button id="btn-left"  aria-label="Left">◀</button>
-    <button id="btn-ok"    aria-label="OK">●</button>
     <button id="btn-right" aria-label="Right">▶</button>
     <button id="btn-down"  aria-label="Down">▼</button>
   </div>
+
+  <button id="btn-confirm" aria-label="Confirm">▶</button>
 
   <script src="main.js"></script>
   <script>
@@ -93,11 +122,11 @@
         window.dispatchEvent(new KeyboardEvent('keyup',   { code, bubbles: true }));
       }
       const map = {
-        'btn-up':    'ArrowUp',
-        'btn-down':  'ArrowDown',
-        'btn-left':  'ArrowLeft',
-        'btn-right': 'ArrowRight',
-        'btn-ok':    'Enter',
+        'btn-up':      'ArrowUp',
+        'btn-down':    'ArrowDown',
+        'btn-left':    'ArrowLeft',
+        'btn-right':   'ArrowRight',
+        'btn-confirm': 'Enter',
       };
       for (const [id, code] of Object.entries(map)) {
         document.getElementById(id).addEventListener('touchstart', e => {

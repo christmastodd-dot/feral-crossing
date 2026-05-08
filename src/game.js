@@ -528,7 +528,7 @@ export class Game {
     c.fillStyle = '#666';
     c.font      = '13px monospace';
     c.textAlign = 'center';
-    c.fillText('LEFT / RIGHT to browse   ENTER to confirm', CANVAS_WIDTH / 2, 100);
+    c.fillText('◀ ▶ to browse  ·  ENTER or tap ▶ to confirm', CANVAS_WIDTH / 2, 100);
 
     const CAT_S    = 60;         // sprite size for this screen
     const SPACING  = 90;         // horizontal gap center-to-center
@@ -648,7 +648,7 @@ export class Game {
     ctx.fillStyle   = '#fff';
     ctx.font        = 'bold 22px monospace';
     ctx.textAlign   = 'center';
-    ctx.fillText('Press  ENTER  to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 72);
+    ctx.fillText('ENTER  or tap  ▶  to start', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 72);
     ctx.restore();
 
     ctx.fillStyle = '#555';
