@@ -142,7 +142,7 @@ export class Game {
         if (code === 'Enter' || code === 'Space') {
           if (this._pauseOpt === 0) { this.state = 'playing'; }
           if (this._pauseOpt === 1) { this._startGame(); }
-          if (this._pauseOpt === 2) { this.audio.stopMusic(); this.state = 'title'; }
+          if (this._pauseOpt === 2) { this.state = 'title'; }
         }
         if (code === 'Escape') this.state = 'playing';
         break;
@@ -178,7 +178,6 @@ export class Game {
     this._fish     = null;
     this.background.refreshSigns();
     this.state     = 'playing';
-    this.audio.startMusic();
   }
 
   _die() {
@@ -347,7 +346,6 @@ export class Game {
     this._deathTimer -= dt;
     if (this._deathTimer <= 0) {
       if (this.lives <= 0) {
-        this.audio.stopMusic();
         this.audio.playGameOver();
         if (isHighScore(this.score)) {
           saveScore(this.score, this.playerName);

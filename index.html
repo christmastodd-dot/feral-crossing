@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Feral Crossing</title>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,23 +13,99 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
     }
 
     canvas {
       display: block;
-      /* Render at native res; browser scales via CSS for crisp pixels */
       image-rendering: pixelated;
       image-rendering: crisp-edges;
-      /* Cap to viewport while keeping aspect ratio */
-      max-width: 100vw;
-      max-height: 100vh;
+      /* Scale to fill viewport while preserving 800:636 aspect ratio */
+      width: min(100vw, calc(100vh * 800 / 636));
+      height: auto;
+      touch-action: none;
+    }
+
+    /* On-screen D-pad — shown only on touch devices */
+    #dpad {
+      display: none;
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      left: max(16px, env(safe-area-inset-left));
+      z-index: 10;
+      grid-template-areas:
+        ".    up    ."
+        "left mid   right"
+        ".    down  .";
+      grid-template-columns: 54px 54px 54px;
+      grid-template-rows: 54px 54px 54px;
+      gap: 5px;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    @media (pointer: coarse) {
+      #dpad { display: grid; }
+    }
+
+    #btn-up    { grid-area: up; }
+    #btn-left  { grid-area: left; }
+    #btn-ok    { grid-area: mid; }
+    #btn-right { grid-area: right; }
+    #btn-down  { grid-area: down; }
+
+    #dpad button {
+      background: rgba(255,255,255,0.13);
+      border: 2px solid rgba(255,255,255,0.28);
+      border-radius: 12px;
+      color: rgba(255,255,255,0.75);
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #dpad button:active {
+      background: rgba(255,224,0,0.32);
+      border-color: rgba(255,224,0,0.65);
     }
   </style>
 </head>
 <body>
   <canvas id="game" width="800" height="636"></canvas>
+
+  <div id="dpad">
+    <button id="btn-up"    aria-label="Up">▲</button>
+    <button id="btn-left"  aria-label="Left">◀</button>
+    <button id="btn-ok"    aria-label="OK">●</button>
+    <button id="btn-right" aria-label="Right">▶</button>
+    <button id="btn-down"  aria-label="Down">▼</button>
+  </div>
+
   <script src="main.js"></script>
+  <script>
+    (function () {
+      function fire(code) {
+        window.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true }));
+        window.dispatchEvent(new KeyboardEvent('keyup',   { code, bubbles: true }));
+      }
+      const map = {
+        'btn-up':    'ArrowUp',
+        'btn-down':  'ArrowDown',
+        'btn-left':  'ArrowLeft',
+        'btn-right': 'ArrowRight',
+        'btn-ok':    'Enter',
+      };
+      for (const [id, code] of Object.entries(map)) {
+        document.getElementById(id).addEventListener('touchstart', e => {
+          e.preventDefault();
+          fire(code);
+        }, { passive: false });
+      }
+    })();
+  </script>
 </body>
 </html>
