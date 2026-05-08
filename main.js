@@ -1772,7 +1772,7 @@ function overlaps(a, b) {
 }
 
 // â”€â”€ States â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// enterName | selectCat | title | playing | paused | dying | celebrating | gameover
+// selectCat | title | playing | paused | dying | celebrating | gameover
 
 class Game {
   constructor(canvas) {
@@ -1786,7 +1786,7 @@ class Game {
     this.audio      = new AudioSystem();
 
     this.shakeAmt  = 0;
-    this.state     = 'enterName';
+    this.state     = 'selectCat';
     this.lives     = LIVES_START;
     this.score     = 0;
     this.crossings = 0;
@@ -1802,8 +1802,7 @@ class Game {
     this._pauseOpt = 0;
 
     // Player name
-    this.playerName = '';
-    this._nameInput = '';
+    this.playerName = 'CAT';
 
     // Character selection
     this._selectedCat = 0;
@@ -1858,19 +1857,6 @@ class Game {
 
   _onKey(code, key = '') {
     switch (this.state) {
-
-      case 'enterName':
-        if (key.length === 1 && this._nameInput.length < 12) {
-          this._nameInput += key;
-        }
-        if (code === 'Backspace') {
-          this._nameInput = this._nameInput.slice(0, -1);
-        }
-        if (code === 'Enter') {
-          this.playerName = this._nameInput.trim() || 'CAT';
-          this.state = 'selectCat';
-        }
-        break;
 
       case 'selectCat':
         if (code === 'ArrowLeft'  || code === 'KeyA') this._selectedCat = (this._selectedCat + CAT_PALETTES.length - 1) % CAT_PALETTES.length;
@@ -2124,7 +2110,6 @@ class Game {
   draw() {
     const { ctx } = this;
 
-    if (this.state === 'enterName')      { this._drawEnterName();    return; }
     if (this.state === 'selectCat')      { this._drawSelectCat();    return; }
     if (this.state === 'title')          { this._drawTitle();        return; }
     if (this.state === 'gameover')       { this._drawGameOver();     return; }
@@ -2278,65 +2263,6 @@ class Game {
     ctx.fillStyle = '#555';
     ctx.font = '11px monospace';
     ctx.fillText('UP/DOWN  Â·  ENTER to select  Â·  ESC resumes', CANVAS_WIDTH / 2, py + ph - 12);
-  }
-
-  _drawEnterName() {
-    const c = this.ctx;
-    c.fillStyle = '#0a0e1a';
-    c.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-    c.save();
-    c.shadowColor = '#d48000';
-    c.shadowBlur  = 24;
-    c.fillStyle   = '#ffe000';
-    c.font        = 'bold 58px monospace';
-    c.textAlign   = 'center';
-    c.fillText('FERAL CROSSING', CANVAS_WIDTH / 2, 100);
-    c.restore();
-
-    c.fillStyle = '#b0b090';
-    c.font      = '17px monospace';
-    c.textAlign = 'center';
-    c.fillText('Cross 10 lanes of bald-driver traffic.', CANVAS_WIDTH / 2, 140);
-    c.fillText("Don't get smushed.", CANVAS_WIDTH / 2, 162);
-
-    c.fillStyle = '#aaa';
-    c.font      = '18px monospace';
-    c.fillText('Enter your name to begin:', CANVAS_WIDTH / 2, 228);
-
-    // Name input box
-    const boxW = 260, boxH = 52;
-    const boxX = (CANVAS_WIDTH - boxW) / 2;
-    const boxY = 244;
-    c.fillStyle = '#1a1a2e';
-    c.fillRect(boxX, boxY, boxW, boxH);
-    c.strokeStyle = '#ffe000';
-    c.lineWidth = 2;
-    c.strokeRect(boxX, boxY, boxW, boxH);
-
-    const display = this._nameInput || '';
-    const cursor  = Math.floor(performance.now() / 500) % 2 === 0 ? '|' : '';
-    c.fillStyle = '#fff';
-    c.font      = 'bold 26px monospace';
-    c.textAlign = 'center';
-    c.fillText(display + cursor, CANVAS_WIDTH / 2, boxY + 36);
-
-    c.fillStyle = '#555';
-    c.font      = '13px monospace';
-    c.fillText('Type your name   /   ENTER to continue', CANVAS_WIDTH / 2, 330);
-
-    // High score preview
-    const scores = getScores();
-    if (scores.length > 0) {
-      c.fillStyle = '#444';
-      c.font = '12px monospace';
-      c.fillText('-- top scores --', CANVAS_WIDTH / 2, 374);
-      scores.slice(0, 3).forEach((s, i) => {
-        c.fillStyle = '#666';
-        const nameStr = (s.name || s.initials || '???').padEnd(12, ' ');
-        c.fillText(`${i + 1}.  ${nameStr}  ${String(s.score).padStart(6, '0')}`, CANVAS_WIDTH / 2, 394 + i * 22);
-      });
-    }
   }
 
   _drawSelectCat() {
